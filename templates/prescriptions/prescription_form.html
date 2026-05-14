@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ title }} – RxManager{% endblock %}
+
+{% block extra_head %}
+<style>
+  .formset-row { background: var(--bg-card2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 0.75rem; position: relative; }
+  .formset-row:hover { border-color: rgba(0,212,170,0.25); }
+  .del-checkbox-wrapper { position: absolute; top: 0.6rem; right: 0.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'prescriptions:prescription_list' %}">Prescriptions</a></li>
+    <li class="breadcrumb-item active">{{ title }}</li>
+  </ol>
+</nav>
+<div class="page-header"><h1><i class="bi bi-file-medical me-2" style="color:var(--accent)"></i>{{ title }}</h1></div>
+
+<form method="post" novalidate id="prescriptionForm">
+{% csrf_token %}
+{{ formset.management_form }}
+
+<div class="row g-4">
+  <!-- Left: Patient Info -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-person me-2" style="color:var(--accent)"></i>Patient Information</h5></div>
+      <div class="card-body">
+        {% if prescription %}
+          <!-- editing: show current patient, not re-create -->
+          <div class="mb-3 p-3" style="background:var(--bg-card2);border-radius:var(--radius-sm)">
+            <div class="fw-600">{{ prescription.patient.name }}</div>
+            <div class="text-muted small">
+              {% if prescription.patient.age %}{{ prescription.patient.age }} yrs &bull; {% endif %}
+              {{ prescription.patient.get_gender_display }}
+            </div>
+          </div>
+        {% else %}
+          <!-- new prescription: pick existing or create -->
+          <div class="mb-3">
+            <label class="form-label">Select Existing Patient</label>
+            <select name="patient_id" class="form-select" id="patient_id_select">
+              <option value="">-- New Patient --</option>
+              {% for p in patients %}
+                <option value="{{ p.pk }}">{{ p.name }} {% if p.age %}({{ p.age }}y){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="newPatientFields">
+            <hr style="border-color:var(--border)">
+            <p class="text-muted small">Or fill in new patient details:</p>
+            {% if patient_form %}
+              <div class="mb-2">
+                <label class="form-label">Patient Name *</label>
+                {% render_field patient_form.name class="form-control" %}
+                {% if patient_form.name.errors %}<div class="text-danger small">{{ patient_form.name.errors|join:", " }}</div>{% endif %}
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="form-label">Age</label>
+                  {% render_field patient_form.age class="form-control" %}
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Gender</label>
+                  {% render_field patient_form.gender class="form-select" %}
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Blood Group</label>
+                  {% render_field patient_form.blood_group class="form-select" %}
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Weight (kg)</label>
+                  {% render_field patient_form.weight class="form-control" %}
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Phone</label>
+                  {% render_field patient_form.phone class="form-control" %}
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Address</label>
+                  {% render_field patient_form.address class="form-control" %}
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Allergies</label>
+                  {% render_field patient_form.allergies class="form-control" %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Prescription Details -->
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-clipboard-pulse me-2" style="color:var(--accent)"></i>Clinical Information</h5></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Date *</label>
+            {% render_field p_form.date class="form-control" %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Serial No.</label>
+            {% render_field p_form.serial_no class="form-control" %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Follow-Up Date</label>
+            {% render_field p_form.follow_up_date class="form-control" %}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Chief Complaint / History</label>
+            {% render_field p_form.chief_complaint class="form-control" %}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Diagnosis</label>
+            {% render_field p_form.diagnosis class="form-control" %}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Investigations Advised</label>
+            {% render_field p_form.investigations class="form-control" %}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Advice / Notes</label>
+            {% render_field p_form.advice class="form-control" %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medicine Items -->
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title"><i class="bi bi-capsule me-2" style="color:var(--accent)"></i>Medicines (Rx)</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="addMedicineBtn">
+          <i class="bi bi-plus-lg me-1"></i>Add Row
+        </button>
+      </div>
+      <div class="card-body" id="formsetContainer">
+        {% for item_form in formset %}
+        <div class="formset-row medicine-row {% if item_form.instance.pk %}existing-row{% endif %}">
+          {% if item_form.instance.pk %}{{ item_form.id }}{% else %}{{ item_form.id }}{% endif %}
+          <div class="del-checkbox-wrapper">
+            {% if item_form.instance.pk %}
+              <label class="text-danger small" title="Delete this row">
+                <input type="checkbox" name="{{ item_form.DELETE.html_name }}" class="form-check-input me-1">
+                <i class="bi bi-trash"></i>
+              </label>
+            {% endif %}
+          </div>
+          <div class="row g-2">
+            <div class="col-md-5">
+              <label class="form-label">Medicine (Catalog)</label>
+              {% render_field item_form.medicine class="form-select medicine-select" %}
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Custom Medicine Name</label>
+              {% render_field item_form.custom_medicine class="form-control" %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Dosage</label>
+              {% render_field item_form.dosage class="form-control" %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Frequency</label>
+              {% render_field item_form.frequency class="form-select" %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Duration</label>
+              {% render_field item_form.duration class="form-control" %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Instructions</label>
+              {% render_field item_form.instructions class="form-control" %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-check-lg me-2"></i>Save Prescription
+      </button>
+      <a href="{% url 'prescriptions:prescription_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const medicinesData = {{ medicines_json|safe }};
+
+// Auto-fill form fields when medicine selected from catalog
+document.addEventListener('change', function(e) {
+  if (!e.target.classList.contains('medicine-select')) return;
+  const row = e.target.closest('.formset-row');
+  const medId = parseInt(e.target.value);
+  const med = medicinesData.find(m => m.id === medId);
+  if (!med) return;
+  if (med.default_dosage) row.querySelector('[name$="-dosage"]').value = med.default_dosage;
+  if (med.default_duration) row.querySelector('[name$="-duration"]').value = med.default_duration;
+  if (med.default_instructions) row.querySelector('[name$="-instructions"]').value = med.default_instructions;
+});
+
+// Toggle new patient fields when selecting existing patient
+const patientSelect = document.getElementById('patient_id_select');
+if (patientSelect) {
+  const newFields = document.getElementById('newPatientFields');
+  patientSelect.addEventListener('change', function() {
+    newFields.style.display = this.value ? 'none' : 'block';
+  });
+}
+
+// Add new medicine row dynamically
+let formCount = {{ formset.total_form_count }};
+const totalFormsInput = document.querySelector('[name="{{ formset.management_form.TOTAL_FORM_COUNT.html_name }}"]');
+const addBtn = document.getElementById('addMedicineBtn');
+const container = document.getElementById('formsetContainer');
+const emptyRow = document.querySelector('.formset-row:last-child');
+
+addBtn.addEventListener('click', function() {
+  const newRow = emptyRow.cloneNode(true);
+  newRow.innerHTML = newRow.innerHTML.replace(/__prefix__|form-\d+/g, match => {
+    if (match === '__prefix__') return `form-${formCount}`;
+    return `form-${formCount}`;
+  });
+  // Clear values
+  newRow.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+  newRow.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  const prefix = `form-${formCount}`;
+  newRow.querySelectorAll('[name]').forEach(el => {
+    el.name = el.name.replace(/form-\d+/, prefix);
+    if (el.id) el.id = el.id.replace(/form-\d+|id_form-\d+/, `id_${prefix}`);
+  });
+  container.appendChild(newRow);
+  formCount++;
+  totalFormsInput.value = formCount;
+});
+</script>
+{% endblock %}

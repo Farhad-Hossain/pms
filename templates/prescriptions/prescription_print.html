@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rx #{{ prescription.pk }} – {{ prescription.patient.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+    .rx-wrapper { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+    /* Header */
+    .rx-header { background: linear-gradient(135deg, #0f4a33 0%, #1a6b4a 100%); color: white; padding: 1.5rem 2rem; }
+    .rx-clinic-name { font-size: 1.5rem; font-weight: 700; font-family: 'Playfair Display', serif; }
+    .rx-doctor-sub { font-size: 0.88rem; opacity: 0.85; }
+    .rx-header-right { text-align: right; font-size: 0.82rem; opacity: 0.85; }
+    /* Patient Bar */
+    .rx-patient-bar { background: #e8f5ee; border-bottom: 2px solid #1a6b4a; padding: 0.8rem 2rem; display: flex; gap: 2rem; flex-wrap: wrap; }
+    .rx-patient-bar .field label { font-size: 0.72rem; color: #666; text-transform: uppercase; font-weight: 600; }
+    .rx-patient-bar .field span { display: block; font-weight: 600; color: #1a1a1a; }
+    /* Body */
+    .rx-body { padding: 1.5rem 2rem; }
+    /* Clinical section */
+    .section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #0f4a33; border-bottom: 1px solid #c8e6d4; padding-bottom: 0.3rem; margin-bottom: 0.75rem; }
+    .clinical-box { background: #f8fffe; border: 1px solid #c8e6d4; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: #333; white-space: pre-wrap; }
+    /* Rx symbol & medicines */
+    .rx-symbol { font-family: 'Times New Roman', serif; font-size: 3.5rem; color: #1a6b4a; font-style: italic; line-height: 1; float: left; margin-right: 0.5rem; margin-top: -0.25rem; }
+    .rx-medicines-header { overflow: hidden; }
+    table.med-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 1rem; }
+    table.med-table thead th { background: #0f4a33; color: white; padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.5px; }
+    table.med-table tbody td { padding: 0.55rem 0.75rem; border-bottom: 1px dashed #d4e8da; vertical-align: top; }
+    table.med-table tbody tr:last-child td { border-bottom: none; }
+    table.med-table tbody tr:nth-child(even) { background: #f8fffe; }
+    .med-name { font-weight: 600; color: #0f3d22; }
+    /* Footer sections */
+    .rx-footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    .rx-advice-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.88rem; color: #333; }
+    .rx-followup { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.88rem; color: #1e40af; text-align: center; }
+    /* Signature */
+    .rx-signature-section { margin-top: 2rem; text-align: right; padding-right: 2rem; }
+    .sig-line { border-top: 1.5px solid #1a6b4a; width: 180px; margin-left: auto; margin-bottom: 0.4rem; }
+    .sig-name { font-size: 0.85rem; color: #0f3d22; font-weight: 600; }
+    /* Print controls */
+    .print-controls { text-align: center; margin-bottom: 1rem; }
+    .btn-print { background: #1a6b4a; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+    .btn-close-print { background: #6b7280; color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin-left: 0.5rem; }
+    /* Rx footer bar */
+    .rx-footer-bar { background: #0f4a33; color: rgba(255,255,255,0.7); font-size: 0.72rem; padding: 0.6rem 2rem; display: flex; justify-content: space-between; }
+    @media print {
+      body { background: white; padding: 0; }
+      .rx-wrapper { box-shadow: none; border-radius: 0; }
+      .print-controls { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="print-controls no-print">
+  <button class="btn-print" onclick="window.print()">🖨 Print Prescription</button>
+  <button class="btn-close-print" onclick="window.close()">✕ Close</button>
+  <a href="{% url 'prescriptions:prescription_detail' prescription.pk %}" style="margin-left:0.5rem;color:#1a6b4a;font-size:0.9rem">← Back to Detail</a>
+</div>
+
+<div class="rx-wrapper">
+  <!-- Header -->
+  <div class="rx-header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+      <div>
+        <div class="rx-clinic-name">{{ prescription.doctor.clinic_name|default:"Medical Practice" }}</div>
+        <div class="rx-doctor-sub">
+          <strong>Dr. {{ prescription.doctor.name }}</strong>
+          {% if prescription.doctor.degrees %} &bull; {{ prescription.doctor.degrees }}{% endif %}
+          {% if prescription.doctor.specialization %} &bull; {{ prescription.doctor.specialization }}{% endif %}
+        </div>
+        {% if prescription.doctor.bmdc_reg_no %}
+        <div class="rx-doctor-sub">BMDC Reg: {{ prescription.doctor.bmdc_reg_no }}</div>
+        {% endif %}
+      </div>
+      <div class="rx-header-right">
+        {% if prescription.doctor.phone %}<div>📞 {{ prescription.doctor.phone }}</div>{% endif %}
+        {% if prescription.doctor.clinic_address %}<div style="max-width:220px">{{ prescription.doctor.clinic_address }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient Bar -->
+  <div class="rx-patient-bar">
+    <div class="field"><label>Patient</label><span>{{ prescription.patient.name }}</span></div>
+    {% if prescription.patient.age %}<div class="field"><label>Age</label><span>{{ prescription.patient.age }} yrs</span></div>{% endif %}
+    {% if prescription.patient.gender %}<div class="field"><label>Gender</label><span>{{ prescription.patient.get_gender_display }}</span></div>{% endif %}
+    {% if prescription.patient.blood_group %}<div class="field"><label>Blood Group</label><span>{{ prescription.patient.blood_group }}</span></div>{% endif %}
+    {% if prescription.patient.weight %}<div class="field"><label>Weight</label><span>{{ prescription.patient.weight }} kg</span></div>{% endif %}
+    {% if prescription.patient.phone %}<div class="field"><label>Phone</label><span>{{ prescription.patient.phone }}</span></div>{% endif %}
+    <div class="field" style="margin-left:auto"><label>Date</label><span>{{ prescription.date }}</span></div>
+    {% if prescription.serial_no %}<div class="field"><label>Rx No.</label><span>{{ prescription.serial_no }}</span></div>{% endif %}
+  </div>
+
+  <div class="rx-body">
+    <!-- Clinical Info -->
+    {% if prescription.chief_complaint %}
+    <div class="mb-3">
+      <div class="section-title">Chief Complaint / History</div>
+      <div class="clinical-box">{{ prescription.chief_complaint }}</div>
+    </div>
+    {% endif %}
+
+    {% if prescription.diagnosis %}
+    <div class="mb-3">
+      <div class="section-title">Diagnosis</div>
+      <div class="clinical-box" style="font-weight:600">{{ prescription.diagnosis }}</div>
+    </div>
+    {% endif %}
+
+    {% if prescription.investigations %}
+    <div class="mb-3">
+      <div class="section-title">Investigations</div>
+      <div class="clinical-box">{{ prescription.investigations }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Medicines -->
+    {% if prescription.items.all %}
+    <div class="mb-3">
+      <div class="section-title rx-medicines-header">
+        <span class="rx-symbol">℞</span>
+        Medicines Prescribed
+      </div>
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Medicine</th>
+            <th>Dosage</th>
+            <th>Frequency</th>
+            <th>Duration</th>
+            <th>Instructions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in prescription.items.all %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td class="med-name">{{ item.medicine_name }}</td>
+            <td>{{ item.dosage|default:"—" }}</td>
+            <td>{{ item.frequency|default:"—" }}</td>
+            <td>{{ item.duration|default:"—" }}</td>
+            <td>{{ item.instructions|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Advice & Follow-Up -->
+    {% if prescription.advice or prescription.follow_up_date %}
+    <div class="rx-footer-grid">
+      {% if prescription.advice %}
+      <div>
+        <div class="section-title">Advice</div>
+        <div class="rx-advice-box">{{ prescription.advice|linebreaks }}</div>
+      </div>
+      {% endif %}
+      {% if prescription.follow_up_date %}
+      <div>
+        <div class="section-title">Follow-Up</div>
+        <div class="rx-followup">
+          <div style="font-size:2rem">📅</div>
+          <strong>Come back on</strong><br>
+          <span style="font-size:1.1rem;font-weight:700">{{ prescription.follow_up_date }}</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Patient Allergies -->
+    {% if prescription.patient.allergies %}
+    <div class="mt-3" style="background:#fff0f0;border:1px solid #fecaca;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem">
+      <strong style="color:#b91c1c">⚠ Allergies:</strong> {{ prescription.patient.allergies }}
+    </div>
+    {% endif %}
+
+    <!-- Signature -->
+    <div class="rx-signature-section">
+      <div class="sig-line"></div>
+      <div class="sig-name">Dr. {{ prescription.doctor.name }}</div>
+      {% if prescription.doctor.degrees %}
+      <div style="font-size:0.78rem;color:#555">{{ prescription.doctor.degrees }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="rx-footer-bar">
+    <span>Generated by RxManager</span>
+    <span>This prescription is valid for 30 days from the date of issue</span>
+    <span>{{ prescription.date }}</span>
+  </div>
+</div>
+</body>
+</html>

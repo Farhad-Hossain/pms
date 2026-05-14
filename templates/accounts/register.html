@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}Register – RxManager{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <div class="auth-logo"><i class="bi bi-heart-pulse-fill"></i></div>
+  <h2 class="auth-title text-center">Create Account</h2>
+  <p class="auth-subtitle text-center mb-4">Register as a Doctor on RxManager</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label">Full Name *</label>
+        {% render_field form.name class="form-control" %}
+        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Email Address *</label>
+        {% render_field form.email class="form-control" %}
+        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Specialization</label>
+        {% render_field form.specialization class="form-control" %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Degrees</label>
+        {% render_field form.degrees class="form-control" %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone</label>
+        {% render_field form.phone class="form-control" %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">BMDC Reg. No.</label>
+        {% render_field form.bmdc_reg_no class="form-control" %}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Clinic/Hospital Name</label>
+        {% render_field form.clinic_name class="form-control" %}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Clinic Address</label>
+        {% render_field form.clinic_address class="form-control" %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Password *</label>
+        {% render_field form.password1 class="form-control" %}
+        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Confirm Password *</label>
+        {% render_field form.password2 class="form-control" %}
+        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors|join:", " }}</div>{% endif %}
+      </div>
+    </div>
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary w-100 mt-4 py-2">
+      <i class="bi bi-person-plus me-2"></i>Create Account
+    </button>
+  </form>
+  <p class="text-center text-muted mt-3 mb-0 small">
+    Already have an account? <a href="{% url 'accounts:login' %}" class="text-decoration-none" style="color:var(--accent)">Sign in</a>
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Patients – RxManager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-1">
+      <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Patients</li>
+    </ol></nav>
+    <h1><i class="bi bi-people me-2" style="color:var(--accent)"></i>Patients</h1>
+  </div>
+  <a href="{% url 'prescriptions:patient_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Patient</a>
+</div>
+
+<form method="get" class="card p-3 mb-4">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search patient name...">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+      <a href="{% url 'prescriptions:patient_list' %}" class="btn btn-secondary ms-1">Clear</a>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  {% if patients %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>Name</th><th>Age</th><th>Gender</th><th>Phone</th><th>Blood Group</th><th>Allergies</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for patient in patients %}
+        <tr>
+          <td class="fw-600">{{ patient.name }}</td>
+          <td>{{ patient.age|default:"—" }}</td>
+          <td>{{ patient.get_gender_display|default:"—" }}</td>
+          <td>{{ patient.phone|default:"—" }}</td>
+          <td>{% if patient.blood_group %}<span class="badge badge-dosage">{{ patient.blood_group }}</span>{% else %}—{% endif %}</td>
+          <td class="text-muted">{{ patient.allergies|truncatechars:30|default:"—" }}</td>
+          <td>
+            <a href="{% url 'prescriptions:patient_update' patient.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'prescriptions:prescription_create' %}?patient_id={{ patient.pk }}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-medical-fill"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="bi bi-people d-block"></i><p>No patients found.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

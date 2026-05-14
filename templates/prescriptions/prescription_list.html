@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Prescriptions – RxManager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-1">
+      <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Prescriptions</li>
+    </ol></nav>
+    <h1><i class="bi bi-file-medical me-2" style="color:var(--accent)"></i>All Prescriptions</h1>
+  </div>
+  <a href="{% url 'prescriptions:prescription_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Prescription</a>
+</div>
+
+<form method="get" class="card p-3 mb-4">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by patient name...">
+    </div>
+    <div class="col-auto d-flex gap-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+      <a href="{% url 'prescriptions:prescription_list' %}" class="btn btn-secondary">Clear</a>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  {% if prescriptions %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>Rx #</th><th>Patient</th><th>Age/Gender</th><th>Date</th><th>Diagnosis</th><th>Follow-Up</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for rx in prescriptions %}
+        <tr>
+          <td><span class="badge badge-dosage">Rx #{{ rx.pk }}</span></td>
+          <td class="fw-600">{{ rx.patient.name }}</td>
+          <td class="text-muted">
+            {% if rx.patient.age %}{{ rx.patient.age }}y{% endif %}
+            {% if rx.patient.gender %} / {{ rx.patient.get_gender_display }}{% endif %}
+          </td>
+          <td>{{ rx.date }}</td>
+          <td class="text-muted">{{ rx.diagnosis|truncatechars:40|default:"—" }}</td>
+          <td class="text-muted">{{ rx.follow_up_date|default:"—" }}</td>
+          <td>
+            <a href="{% url 'prescriptions:prescription_detail' rx.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+            <a href="{% url 'prescriptions:prescription_update' rx.pk %}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'prescriptions:prescription_print' rx.pk %}" class="btn btn-sm btn-outline-success me-1" target="_blank"><i class="bi bi-printer"></i></a>
+            <a href="{% url 'prescriptions:prescription_delete' rx.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-file-medical d-block"></i>
+    <p>No prescriptions found. <a href="{% url 'prescriptions:prescription_create' %}" style="color:var(--accent)">Write your first prescription</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

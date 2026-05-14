@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}My Profile – RxManager{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Dashboard</a></li>
+    <li class="breadcrumb-item active">My Profile</li>
+  </ol>
+</nav>
+<div class="page-header">
+  <h1><i class="bi bi-person-gear me-2" style="color:var(--accent)"></i>My Profile</h1>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card p-4 text-center">
+      <div class="mb-3" style="font-size:4rem;color:var(--accent)"><i class="bi bi-person-circle"></i></div>
+      <h4>Dr. {{ doctor.name }}</h4>
+      <p class="text-muted">{{ doctor.specialization|default:"General Physician" }}</p>
+      <p class="text-muted small">{{ doctor.degrees }}</p>
+      {% if doctor.bmdc_reg_no %}
+        <span class="badge badge-dosage">BMDC: {{ doctor.bmdc_reg_no }}</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h5 class="card-title">Edit Profile</h5></div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            {% for field in form %}
+            <div class="col-md-6 {% if field.name == 'clinic_address' or field.name == 'signature' %}col-12{% endif %}">
+              <label class="form-label">{{ field.label }}</label>
+              {% render_field field class="form-control" %}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-2"></i>Save Changes</button>
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
