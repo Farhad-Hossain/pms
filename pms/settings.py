@@ -9,7 +9,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://slqik-37-111-214-163.run.pinggy-free.link']
+CSRF_TRUSTED_ORIGINS = [
+    'https://slqik-37-111-214-163.run.pinggy-free.link',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -34,7 +36,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'prescription_system.urls'
+ROOT_URLCONF = 'pms.urls'
 
 TEMPLATES = [
     {
@@ -52,12 +54,15 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'prescription_system.wsgi.application'
+WSGI_APPLICATION = 'pms.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        "OPTIONS": {
+            'read_default_file': str(BASE_DIR / 'mysql_db.conf'),
+        }
     }
 }
 
